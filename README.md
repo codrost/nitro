@@ -1,2 +1,1 @@
-# nitro
-f3 nitro project
+# f3-starter

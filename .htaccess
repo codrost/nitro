@@ -1,0 +1,93 @@
+AddDefaultCharset UTF-8
+<IfModule mod_mime.c>
+    AddType application/x-javascript .js
+    AddType text/css .css
+    AddType application/json json
+</IfModule>
+<ifModule mod_headers.c>
+    # One year for image and video files
+    #<filesMatch ".(flv|gif|ico|jpg|jpeg|mp4|mpeg|png|svg|swf|webp)$">
+    #    Header set Cache-Control "max-age=31536000, public"
+    #</filesMatch>
+
+    # One month for JavaScript and PDF files
+    #<filesMatch ".(js|pdf)$">
+    #    Header set Cache-Control "max-age=2592000, public"
+    #</filesMatch>
+
+    # One day for JS/CSS files
+    <filesMatch ".(js|css)$">
+        Header set Cache-Control "max-age=7200, public"
+    </filesMatch>
+</ifModule>
+<IfModule mod_deflate.c>
+	AddOutputFilterByType DEFLATE text/plain
+	AddOutputFilterByType DEFLATE text/html
+	AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+	AddOutputFilterByType DEFLATE application/html
+	AddOutputFilterByType DEFLATE application/javascript
+	AddOutputFilterByType DEFLATE application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+
+    #Fonts
+    AddOutputFilterByType DEFLATE application/vnd.ms-fontobject
+    AddOutputFilterByType DEFLATE application/x-font
+    AddOutputFilterByType DEFLATE application/x-font-opentype
+    AddOutputFilterByType DEFLATE application/x-font-otf
+    AddOutputFilterByType DEFLATE application/x-font-truetype
+    AddOutputFilterByType DEFLATE application/x-font-ttf
+    AddOutputFilterByType DEFLATE font/opentype
+    AddOutputFilterByType DEFLATE font/otf
+    AddOutputFilterByType DEFLATE font/ttf
+    <IfModule mod_setenvif.c>
+        BrowserMatch ^Mozilla/4 gzip-only-text/html
+        BrowserMatch ^Mozilla/4.0[678] no-gzip
+        BrowserMatch bMSIE !no-gzip !gzip-only-text/html
+    </IfModule>
+</IfModule>
+# Temporary turn off mod_security
+<IfModule mod_security.c>
+  SecFilterEngine Off
+  SecFilterScanPOST Off
+</IfModule>
+# Additional headers
+Header append Vary User-Agent env=!dont-vary
+Header set X-Content-Type-Options "nosniff"
+Header always append Content-Security-Policy "frame-ancestors 'self' *.relaticsonline.com *.whereby.com *.pim.info;"
+Header always set Strict-Transport-Security "max-age=63072000; includeSubDomains"
+#Header always edit Set-Cookie (.*) "$1; Secure SameSite=none"
+#Header always edit Set-Cookie ^(.*)$ $1;SameSite=None;Secure
+# /**@todo fix this? we have a problem with blob images from lufo tileloadfunction */
+#Header set Content-Security-Policy "default-src 'self'; script-src * 'self' 'unsafe-inline' *.jquery.com *.cloudflare.com *.polyfill.io *.epsg.io; style-src * 'self' 'unsafe-inline' *.jquery.com *.fontawesome.com; img-src * 'self' data: *.jquery.com *.cloudflare.com; font-src 'self' *.jquery.com *.cloudflare.com *.polyfill.io *.epsg.io *.fontawesome.com"
+
+#php_value upload_max_filesize 500M
+#php_value post_max_size 500M
+#php_value max_input_time 3000
+#php_value max_execution_time 3000
+
+# Enable rewrite engine and route requests to framework
+RewriteEngine On
+
+# Some servers require you to specify the `RewriteBase` directive
+# In such cases, it should be the path (relative to the document root)
+# containing this .htaccess file
+#
+# RewriteBase /
+
+#RewriteCond %{REQUEST_URI} !^/maintenance\.html$
+#RewriteRule ^(.*)$ https://%{HTTP_HOST}/maintenance.html [R=307,L]
+
+#RewriteCond %{HTTPS} !on
+#RewriteRule (.*) https://%{HTTP_HOST}%{REQUEST_URI}
+
+RedirectMatch "^/openbaar\.php$" "/"
+RedirectMatch "^/login\.php$" "/"
+
+RewriteRule ^(app|dict|ns|tmp)\/|\.ini$ - [R=404]
+
+RewriteCond %{REQUEST_FILENAME} !-l
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule .* index.php [L,QSA]
+RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization},L]
